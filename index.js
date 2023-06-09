@@ -29,7 +29,7 @@ async function run() {
     // Collections
     const usersCollections = client.db('campDb').collection('users');
 
-    app.post('/jws', (req, res)=>{
+    app.post('/jwt', (req, res)=>{
       const user=req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
         expiresIn:'1h'
