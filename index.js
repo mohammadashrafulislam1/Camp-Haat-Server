@@ -93,7 +93,8 @@ async function run() {
     })
     app.get('/courses/:id', async (req, res) => {
       const courseId = req.params.id;
-      const result = await coursesCollections.findOne({ _id:new ObjectId(courseId) });
+      const id = { _id: new ObjectId(courseId)};
+      const result = await coursesCollections.findOne(id);
         res.send(result); 
     })    
     app.get('/mycourses', async(req, res)=>{
