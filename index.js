@@ -43,6 +43,7 @@ async function run() {
     await client.connect();
     // Collections
     const usersCollections = client.db('campDb').collection('users');
+    const coursesCollections = client.db('campDb').collection('courses');
 
     app.post('/jwt', (req, res)=>{
       const user=req.body;
@@ -78,6 +79,13 @@ async function run() {
     app.get('/users', async(req, res)=>{
         const result = await usersCollections.find().toArray();
         res.send(result)
+    })
+
+    // courses Related API
+    app.post('/courses', async(req, res)=>{
+     const newItem = req.body;
+     const result = await coursesCollections.insertOne(newItem)
+     res.send(result)
     })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
