@@ -91,12 +91,23 @@ async function run() {
       const result = await coursesCollections.find().toArray();
       res.send(result)
     })
+    app.get('/courses/:id', async (req, res) => {
+      const courseId = req.params.id;
+      const result = await coursesCollections.findOne({ _id:new ObjectId(courseId) });
+        res.send(result); 
+    })    
     app.get('/mycourses', async(req, res)=>{
       let query = {};
       if(req.query?.email){
         query = { email: req.query.email}
       }
       const result = await coursesCollections.find(query).toArray();
+      res.send(result)
+    })
+    app.delete('/mycourses/:id', async(req, res)=>{
+      const id = req.params.id;
+     const query = {_id: new ObjectId(id)}
+      const result = await coursesCollections.deleteOne(query);
       res.send(result)
     })
     // Send a ping to confirm a successful connection
