@@ -44,6 +44,7 @@ async function run() {
     // Collections
     const usersCollections = client.db('campDb').collection('users');
     const coursesCollections = client.db('campDb').collection('courses');
+    const cartsCollections = client.db('campDb').collection('carts');
 
     app.post('/jwt', (req, res)=>{
       const user=req.body;
@@ -96,7 +97,22 @@ async function run() {
       const id = { _id: new ObjectId(courseId)};
       const result = await coursesCollections.findOne(id);
         res.send(result); 
-    })    
+    }),
+    app.patch('/courses/:id', async (req, res) => {
+      const courseId = req.params.id;
+      const { seats, enroll } = req.body;
+    
+      try {
+        const id = { _id: new ObjectId(courseId) };
+        const result = await coursesCollections.updateOne(id, { $set: { seats, enroll } });
+    
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send('Failed to update the course.');
+      }
+    });
+    
     app.get('/mycourses', async(req, res)=>{
       let query = {};
       if(req.query?.email){
@@ -109,6 +125,12 @@ async function run() {
       const id = req.params.id;
      const query = {_id: new ObjectId(id)}
       const result = await coursesCollections.deleteOne(query);
+      res.send(result)
+    })
+    // cart related api
+    app.post('/carts', async(req, res) =>{
+      const item =req.body;
+      const result = await cartsCollections.insertOne(item);
       res.send(result)
     })
     // Send a ping to confirm a successful connection
