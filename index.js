@@ -78,11 +78,27 @@ async function run() {
        const result = await usersCollections.updateOne(filter, updateDoc);
        res.send(result)
     })
+    app.patch('/users/Instructor/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+       $set:{
+         role: 'Instructor'
+       },
+      };
+      const result = await usersCollections.updateOne(filter, updateDoc);
+      res.send(result)
+   })
     app.get('/users', async(req, res)=>{
         const result = await usersCollections.find().toArray();
         res.send(result)
     })
-
+    app.delete('/users/:id', async(req, res)=>{
+      const id = req.params.id;
+     const query = {_id: new ObjectId(id)}
+      const result = await usersCollections.deleteOne(query);
+      res.send(result)
+    })
     // courses Related API
     app.post('/courses', async(req, res)=>{
      const newItem = req.body;
@@ -148,12 +164,13 @@ async function run() {
       const result = await cartsCollections.find(query).toArray();
       res.send(result);
     });
-    app.delete('/mycarts/:id', async(req, res)=>{
-      const id = req.params.id;
-     const query = {_id: new ObjectId(id)}
-      const result = await cartsCollections.deleteOne(query);
-      res.send(result)
-    })
+    // app.delete('/mycarts/:id', async(req, res)=>{
+    //   const id = req.params.id;
+    //  const query = {_id: new ObjectId(id)}
+    //   const result = await cartsCollections.deleteOne(query);
+    //   res.send(result)
+    // })
+
     // Payment Related API
     app.post('/create-payment-intent', async(req, res)=>{
       const {price} = req.body;
