@@ -45,6 +45,7 @@ async function run() {
     const usersCollections = client.db('campDb').collection('users');
     const coursesCollections = client.db('campDb').collection('courses');
     const cartsCollections = client.db('campDb').collection('carts');
+    const paymentsCollections = client.db('campDb').collection('payments');
 
     app.post('/jwt', (req, res)=>{
       const user=req.body;
@@ -166,6 +167,11 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret
       })
+    })
+    app.post('/payments', async(req, res)=>{
+      const payment = req.body;
+      const result = await paymentsCollections.insertOne(payment);
+      res.send(result)
     })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
