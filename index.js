@@ -9,6 +9,7 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
 const verifyJWT = (req, res, next) =>{
   const authorization = req.headers.authorization;
   if(!authorization){
@@ -54,6 +55,30 @@ async function run() {
       })
       res.send({token})
     })
+// Admin middleware
+    const verifyAdmin = async(req, res, next)=>{
+     const email = req.decoded.email;
+     const query ={email: email}
+     const user = await usersCollections.findOne(query);
+     if(user?.role !== 'admin'){
+      return res.status(403).send({error:true, message: 'forbidden message'})
+     }
+     next();
+    }
+  
+// Instructor MiddleWare
+const verifyInstructor = async (req, res, next) => {
+  const email = req.decoded.email;
+  const query = { email: email };
+  const user = await usersCollections.findOne(query);
+  
+  if (user?.role !== 'Instructor') {
+    return res.status(403).send({ error: true, message: 'Forbidden' });
+  }
+
+  next();
+};
+
 
     // users related api:
     app.post('/users', async(req, res)=>{
@@ -78,6 +103,18 @@ async function run() {
        const result = await usersCollections.updateOne(filter, updateDoc);
        res.send(result)
     })
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        return res.send({ admin: false });
+      }
+    
+      const query = { email: email };
+      const user = await usersCollections.findOne(query);
+      const result = { admin: user?.role === 'admin' };
+      res.send(result);
+    });
+    
     app.patch('/users/Instructor/:id', async(req, res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)};
@@ -89,7 +126,19 @@ async function run() {
       const result = await usersCollections.updateOne(filter, updateDoc);
       res.send(result)
    })
-    app.get('/users', async(req, res)=>{
+   app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+    const email = req.params.email;
+    if (req.decoded.email !== email) {
+      return res.send({ Instructor: false });
+    }
+  
+    const query = { email: email };
+    const user = await usersCollections.findOne(query);
+    const result = { Instructor: user?.role === 'Instructor' };
+    res.send(result);
+  });
+  
+    app.get('/users', verifyJWT, verifyAdmin, async(req, res)=>{
         const result = await usersCollections.find().toArray();
         res.send(result)
     })
@@ -129,6 +178,17 @@ async function run() {
         res.status(500).send('Failed to update the course.');
       }
     });
+    app.patch('/courses/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+       $set:{
+         status: 'approved'
+       },
+      };
+      const result = await coursesCollections.updateOne(filter, updateDoc);
+      res.send(result)
+   })
     
     app.get('/mycourses', async(req, res)=>{
       let query = {};
@@ -156,10 +216,14 @@ async function run() {
       res.send(result);
     });
     
-    app.get('/mycarts', async (req, res) => {
+    app.get('/mycarts', verifyJWT, async(req, res) => {
       let query = {};
       if(req.query?.enrollEmail){
         query = { enrollEmail: req.query.enrollEmail}
+      }
+      const decodedEmail = req.decoded.email;
+      if(req.query.enrollEmail !== decodedEmail){
+       return res.status(401).send({error: true, message: 'Forbidden access'})
       }
       const result = await cartsCollections.find(query).toArray();
       res.send(result);
@@ -195,9 +259,32 @@ async function run() {
       res.send({insertResult, deleteResult})
     })
     app.get('/payments', async (req, res) => {
-      const result = await paymentsCollections.find().toArray();
+      let query = {};
+      if(req.query?.email){
+        query = { email: req.query.email}
+      }
+      const result = await paymentsCollections.find(query).toArray();
       res.send(result);
     });
+    app.get('/ordered', async (req, res) => {
+      let query = {};
+      if (req.query?.instructorEmail) {
+        query = { instructorEmail: req.query.instructorEmail };
+      }
+      const result = await paymentsCollections.find(query).toArray();
+      res.send(result);
+    });
+    app.patch('/ordered/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+       $set:{
+         status: 'approved'
+       },
+      };
+      const result = await paymentsCollections.updateOne(filter, updateDoc);
+      res.send(result)
+   })
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
