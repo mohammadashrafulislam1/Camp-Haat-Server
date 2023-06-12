@@ -142,6 +142,7 @@ const verifyInstructor = async (req, res, next) => {
         const result = await usersCollections.find().toArray();
         res.send(result)
     })
+    
     app.delete('/users/:id', async(req, res)=>{
       const id = req.params.id;
      const query = {_id: new ObjectId(id)}
